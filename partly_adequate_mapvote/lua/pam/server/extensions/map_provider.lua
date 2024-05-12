@@ -4,6 +4,7 @@ PAM_EXTENSION.enabled = true
 
 local setting_namespace = PAM.setting_namespace:AddChild(name)
 
+local populate_from_info_setting = setting_namespace:AddSetting("populate_from_info", pacoman.TYPE_BOOLEAN, true, "Should the map list be populated from the gamemode 'maps' section in the gamemode txt file.")
 local prefixes_setting = setting_namespace:AddSetting("prefixes", pacoman.TYPE_STRING, "", "Maps where at least one of the prefixes fits, will be available for voting.")
 local blacklist_setting = setting_namespace:AddSetting("blacklist", pacoman.TYPE_STRING, "", "Maps that are listed here, won't be available, even when a prefix fits.")
 local whitelist_setting = setting_namespace:AddSetting("whitelist", pacoman.TYPE_STRING, "", "Maps that are listed here, will be available for voting, even when no prefix fits.")
@@ -38,10 +39,33 @@ function PAM_EXTENSION:RegisterOptions()
 	local all_maps = file.Find("maps/*.bsp", "GAME")
 	local starting_option_count = PAM.option_count
 
+	local gamemode_maps_pattern
+	if populate_from_info_setting:GetActiveValue() then
+		print("Populating shit!")
+		local activeGamemode = engine.ActiveGamemode()
+		local info = file.Read("gamemodes/"..activeGamemode.."/"..activeGamemode..".txt", "GAME")
+
+		if (info) then
+			local info = util.KeyValuesToTable(info)
+			if (info.fretta_maps) then
+				gamemode_maps_pattern = table.concat(info.fretta_maps, "|")
+			else
+				gamemode_maps_pattern = info.maps
+			end
+		end
+		print(gamemode_maps_pattern)
+	end
+
 	local prefixes = string.Split(prefixes_setting:GetActiveValue(), ",")
 	local blacklist = blacklist_setting:GetActiveValue()
 	local whitelist = whitelist_setting:GetActiveValue()
 	local limit = limit_setting:GetActiveValue()
+
+	-- In case the prefixes setting is an empty string, it will still populate it to have 1 item
+	-- So if it's got an empty one, we remove it
+	if #prefixes == 1 and prefixes[1] == "" then
+		prefixes[1] = nil
+	end
 
 	for _, map in RandomPairs(all_maps) do
 		map = map:sub(1, -5)
@@ -67,8 +91,13 @@ function PAM_EXTENSION:RegisterOptions()
 			continue
 		end
 
+		if gamemode_maps_pattern and string.match(map, gamemode_maps_pattern) then
+			PAM.RegisterOption(map)
+			continue
+		end
+
 		-- add all maps when no prefix is selected
-		if #prefixes == 0 then
+		if not gamemode_maps_pattern and #prefixes == 0 then
 			PAM.RegisterOption(map)
 			continue;
 		end
