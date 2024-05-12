@@ -52,7 +52,6 @@ function PAM_EXTENSION:RegisterOptions()
 				gamemode_maps_pattern = info.maps
 			end
 		end
-		print(gamemode_maps_pattern)
 	end
 
 	local prefixes = string.Split(prefixes_setting:GetActiveValue(), ",")
