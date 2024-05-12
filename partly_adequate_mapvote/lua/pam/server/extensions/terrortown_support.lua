@@ -7,10 +7,6 @@ function PAM_EXTENSION:Initialize()
 end
 
 function PAM_EXTENSION:OnInitialize()
-	-- terrortown support
-	if GAMEMODE_NAME ~= "terrortown" then return end
-
-
 	-- Notify PAM that the round has ended
 	hook.Add("TTTEndRound", "PAM_RoundEnded", function()
 		PAM.EndRound()
