@@ -41,7 +41,6 @@ function PAM_EXTENSION:RegisterOptions()
 
 	local gamemode_maps_pattern
 	if populate_from_info_setting:GetActiveValue() then
-		print("Populating shit!")
 		local activeGamemode = engine.ActiveGamemode()
 		local info = file.Read("gamemodes/"..activeGamemode.."/"..activeGamemode..".txt", "GAME")
 
