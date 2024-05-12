@@ -25,9 +25,7 @@ local function RegisterExtension()
 			if extension.OnEnable then
 				extension:OnEnable()
 			end
-			return
-		end
-		if extension.OnDisable then
+		elseif extension.OnDisable then
 			extension:OnDisable()
 		end
 	end)
@@ -36,12 +34,15 @@ local function RegisterExtension()
 	PAM.extensions[id] = extension
 	extension_indices[extension_name] = id
 
-	if extension.enabled and extension.OnEnable then
-		extension:OnEnable()
+	if extension.Initialize then
+		-- Initialize, and if returned false, we disable it
+		if extension:Initialize() == false then
+			extension.enabled = false
+		end
 	end
 
-	if extension.Initialize then
-		extension:Initialize()
+	if extension.enabled and extension.OnEnable then
+		extension:OnEnable()
 	end
 
 	print("[PAM] Registered extension \"" .. extension_name .. "\" (" .. (extension.enabled and "enabled" or "disabled") .. ")")
