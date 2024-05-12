@@ -20,6 +20,10 @@ function PAM_EXTENSION:GetRoundCounter()
 	return custom_round_counter
 end
 
+function PAM_EXTENSION:GetRoundLimit()
+	return round_limit:GetActiveValue()
+end
+
 function PAM_EXTENSION:SetRoundCounter(value)
 	if !isnumber(value) then
 		ErrorNoHaltWithStack("Expected a number, but was " .. type(value) .. "\n")
