@@ -42,3 +42,16 @@ function PAM_EXTENSION:OnInitialize()
 		end
 	end
 end
+
+function PAM_EXTENSION:HasRoundLimitExtensionSupport()
+	return true
+end
+
+function PAM_EXTENSION:RoundLimitExtended(newRound, percentage)
+	local roundLimit = PAM.extension_handler.RunReturningEvent("GetRoundLimit") or GetConVar("ttt_round_limit"):GetInt()
+	SetGlobalInt("ttt_rounds_left", roundLimit - newRound)
+
+	if (!timer.Exists("end2prep") && GetRoundState() == ROUND_POST) then
+		PrepareRound()
+	end
+end
