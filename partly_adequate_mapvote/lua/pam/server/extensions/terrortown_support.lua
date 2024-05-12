@@ -2,6 +2,10 @@ PAM_EXTENSION.name = "terrortown_support"
 PAM_EXTENSION.enabled = true
 
 function PAM_EXTENSION:Initialize()
+	-- terrortown support
+	if engine.ActiveGamemode() ~= "terrortown" then return false end
+end
+
 function PAM_EXTENSION:OnInitialize()
 	-- terrortown support
 	if GAMEMODE_NAME ~= "terrortown" then return end
