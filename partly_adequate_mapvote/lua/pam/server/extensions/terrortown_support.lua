@@ -12,6 +12,11 @@ function PAM_EXTENSION:OnInitialize()
 		PAM.EndRound()
 	end)
 
+	local maxRounds = PAM.extension_handler.RunReturningEvent("GetRoundLimit")
+	if maxRounds then
+		SetGlobalInt("ttt_rounds_left", maxRounds)
+	end
+
 	-- ttt2/ttt2
 	if TTT2 then
 		hook.Add("TTT2LoadNextMap", "PAM_Autostart_TTT2", function(nextmap, rounds_left, time_left)
