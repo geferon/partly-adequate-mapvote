@@ -19,7 +19,7 @@ local function RegisterExtension()
 	extension.enabled = enabled_setting:GetActiveValue()
 
 	enabled_setting:AddCallback("extension handler", function(value)
-		extension.enabled = value
+		extension.enabled = (extension.CanEnable and extension:CanEnable() != false and value) or (!extension.CanEnable and value)
 
 		if value then
 			if extension.OnEnable then
@@ -35,8 +35,12 @@ local function RegisterExtension()
 	extension_indices[extension_name] = id
 
 	if extension.Initialize then
-		-- Initialize, and if returned false, we disable it
-		if extension:Initialize() == false then
+		extension:Initialize()
+	end
+
+	if extension.CanEnable then
+		-- Only disable if we return false, if nothing is returned we will assume it doesn't want to be turned off
+		if extension:CanEnable() == false then
 			extension.enabled = false
 		end
 	end
