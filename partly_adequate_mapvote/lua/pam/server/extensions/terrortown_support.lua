@@ -6,13 +6,16 @@ function PAM_EXTENSION:CanEnable()
 	if engine.ActiveGamemode() ~= "terrortown" then return false end
 end
 
+local custom_round_counter_extension
 function PAM_EXTENSION:OnInitialize()
+	custom_round_counter_extension = PAM.extension_handler.GetExtension("custom_round_counter")
+
 	-- Notify PAM that the round has ended
 	hook.Add("TTTEndRound", "PAM_RoundEnded", function()
 		PAM.EndRound()
 	end)
 
-	local maxRounds = PAM.extension_handler.RunReturningEvent("GetRoundLimit")
+	local maxRounds = custom_round_counter_extension.enabled and custom_round_counter_extension.round_limit:GetActiveValue()
 	if maxRounds then
 		SetGlobalInt("ttt_rounds_left", maxRounds)
 	end

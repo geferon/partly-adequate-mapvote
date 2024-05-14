@@ -98,6 +98,15 @@ function PAM.extension_handler.RunAvalanchingEvent(event_name, combine, ...)
 	return combined_result
 end
 
+function PAM.extension_handler.GetExtension(name)
+	for i = 1, #PAM.extensions do
+		local extension = PAM.extensions[i]
+		if extension.name == name then
+			return extension
+		end
+	end
+end
+
 hook.Add("Initialize", "PAM_Initialize_Extensions", function()
 	PAM.extension_handler.RunEvent("OnInitialize")
 end)
