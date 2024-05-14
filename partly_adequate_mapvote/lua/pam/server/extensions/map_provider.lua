@@ -33,26 +33,26 @@ local function SetMapCooldown(mapname, cooldown)
 	end
 end
 
+function PAM_EXTENSION:OnInitialize()
+	local activeGamemode = engine.ActiveGamemode()
+	local info = file.Read("gamemodes/"..activeGamemode.."/"..activeGamemode..".txt", "GAME")
+
+	if (info) then
+		local info = util.KeyValuesToTable(info)
+		self.gamemode_maps_pattern = info.maps
+
+		if (!self.gamemode_maps_pattern and info.fretta_maps) then
+			self.gamemode_maps_pattern = table.concat(info.fretta_maps, "|")
+		end
+	end
+end
+
+
 function PAM_EXTENSION:RegisterOptions()
 	if PAM.vote_type ~= "map" then return end
 
 	local all_maps = file.Find("maps/*.bsp", "GAME")
 	local starting_option_count = PAM.option_count
-
-	local gamemode_maps_pattern
-	if populate_from_info_setting:GetActiveValue() then
-		local activeGamemode = engine.ActiveGamemode()
-		local info = file.Read("gamemodes/"..activeGamemode.."/"..activeGamemode..".txt", "GAME")
-
-		if (info) then
-			local info = util.KeyValuesToTable(info)
-			if (info.fretta_maps) then
-				gamemode_maps_pattern = table.concat(info.fretta_maps, "|")
-			else
-				gamemode_maps_pattern = info.maps
-			end
-		end
-	end
 
 	local prefixes = string.Split(prefixes_setting:GetActiveValue(), ",")
 	local blacklist = blacklist_setting:GetActiveValue()
@@ -89,13 +89,13 @@ function PAM_EXTENSION:RegisterOptions()
 			continue
 		end
 
-		if gamemode_maps_pattern and string.match(map, gamemode_maps_pattern) then
+		if populate_from_info_setting:GetActiveValue() and self.gamemode_maps_pattern and string.match(map, self.gamemode_maps_pattern) then
 			PAM.RegisterOption(map)
 			continue
 		end
 
 		-- add all maps when no prefix is selected
-		if not gamemode_maps_pattern and #prefixes == 0 then
+		if not (populate_from_info_setting:GetActiveValue() and self.gamemode_maps_pattern) and #prefixes == 0 then
 			PAM.RegisterOption(map)
 			continue;
 		end
