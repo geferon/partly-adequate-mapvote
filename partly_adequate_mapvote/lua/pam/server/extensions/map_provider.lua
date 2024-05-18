@@ -62,9 +62,6 @@ function PAM_EXTENSION:OnInitialize()
 	self:UpdateGamemodeMaps(engine.ActiveGamemode())
 end
 
-function PAM_EXTENSION
-
-
 function PAM_EXTENSION:RegisterOptions()
 	if PAM.vote_type ~= "map" then return end
 
