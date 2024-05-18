@@ -33,20 +33,34 @@ local function SetMapCooldown(mapname, cooldown)
 	end
 end
 
-function PAM_EXTENSION:OnInitialize()
-	local activeGamemode = engine.ActiveGamemode()
-	local info = file.Read("gamemodes/"..activeGamemode.."/"..activeGamemode..".txt", "GAME")
+-- Support per gamemode
+PAM_EXTENSION.gamemode_maps_pattern = {}
+function PAM_EXTENSION:UpdateGamemodeMaps(gamemode)
+	-- If the data has previously been loaded, don't load it again
+	if self.gamemode_maps_pattern[gamemode] then return end
 
+	local info = file.Read("gamemodes/"..gamemode.."/"..gamemode..".txt", "GAME")
+
+	-- Empty var, so even if it couldn't be loaded it's set
+	self.gamemode_maps_pattern[gamemode] = {}
 	if (info) then
 		local info = util.KeyValuesToTable(info)
-		self.gamemode_maps_pattern = info.maps
-
-		if (!self.gamemode_maps_pattern and info.fretta_maps) then
-			self.gamemode_maps_pattern = table.concat(info.fretta_maps, "|")
+		if (info.maps) then
+			self.gamemode_maps_pattern[gamemode] = info.maps
+		elseif (info.fretta_maps) then
+			self.gamemode_maps_pattern[gamemode] = table.concat(info.fretta_maps, "|")
 		end
 	end
 end
 
+function PAM_EXTENSION:OnGamemodeChanged(gamemode)
+	-- Load maps for new gamemode
+	self:UpdateGamemodeMaps(gamemode)
+end
+
+function PAM_EXTENSION:OnInitialize()
+	self:UpdateGamemodeMaps(engine.ActiveGamemode())
+end
 
 function PAM_EXTENSION:RegisterOptions()
 	if PAM.vote_type ~= "map" then return end
@@ -89,13 +103,18 @@ function PAM_EXTENSION:RegisterOptions()
 			continue
 		end
 
-		if populate_from_info_setting:GetActiveValue() and self.gamemode_maps_pattern and string.match(map, self.gamemode_maps_pattern) then
+		-- Using the convar gamemode to get the active gamemode as the gamemode extension will change the gamemode convar
+		local current_gamemode = GetConVar("gamemode"):GetString() or engine.ActiveGamemode()
+		if populate_from_info_setting:GetActiveValue() and
+				self.gamemode_maps_pattern[current_gamemode] and #self.gamemode_maps_pattern[current_gamemode] > 0 and
+				string.match(map, self.gamemode_maps_pattern[current_gamemode]) then
 			PAM.RegisterOption(map)
 			continue
 		end
 
 		-- add all maps when no prefix is selected
-		if not (populate_from_info_setting:GetActiveValue() and self.gamemode_maps_pattern) and #prefixes == 0 then
+		if not (populate_from_info_setting:GetActiveValue() and self.gamemode_maps_pattern[current_gamemode] and #self.gamemode_maps_pattern[current_gamemode] > 0)
+				and #prefixes == 0 then
 			PAM.RegisterOption(map)
 			continue;
 		end
