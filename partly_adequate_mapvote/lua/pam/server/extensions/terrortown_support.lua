@@ -17,7 +17,9 @@ function PAM_EXTENSION:OnInitialize()
 
 	local maxRounds = custom_round_counter_extension.enabled and custom_round_counter_extension.round_limit:GetActiveValue()
 	if maxRounds then
-		SetGlobalInt("ttt_rounds_left", maxRounds)
+		hook.Add("TTTInitPostEntity", "PAM_SetRoundsLeft", function()
+			SetGlobalInt("ttt_rounds_left", maxRounds)
+		end)
 	end
 
 	-- ttt2/ttt2
