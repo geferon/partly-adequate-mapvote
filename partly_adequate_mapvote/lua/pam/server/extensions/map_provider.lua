@@ -46,9 +46,9 @@ function PAM_EXTENSION:UpdateGamemodeMaps(gamemode)
 	if (info) then
 		local info = util.KeyValuesToTable(info)
 		if (info.maps) then
-			self.gamemode_maps_pattern[gamemode] = info.maps
+			self.gamemode_maps_pattern[gamemode] = string.Split(info.maps, "|")
 		elseif (info.fretta_maps) then
-			self.gamemode_maps_pattern[gamemode] = table.concat(info.fretta_maps, "|")
+			self.gamemode_maps_pattern[gamemode] = info.fretta_maps
 		end
 	end
 end
@@ -60,6 +60,13 @@ end
 
 function PAM_EXTENSION:OnInitialize()
 	self:UpdateGamemodeMaps(engine.ActiveGamemode())
+end
+
+local function mapMatchesPattern(map, pattern)
+	for _, v in pairs(pattern) do
+		if string.match(map, v) then return true end
+	end
+	return false
 end
 
 function PAM_EXTENSION:RegisterOptions()
@@ -77,6 +84,14 @@ function PAM_EXTENSION:RegisterOptions()
 	-- So if it's got an empty one, we remove it
 	if #prefixes == 1 and prefixes[1] == "" then
 		prefixes[1] = nil
+	end
+	
+	-- Using the convar gamemode to get the active gamemode as the gamemode extension will change the gamemode convar
+	local current_gamemode = gamemode_name or GetConVar("gamemode"):GetString() or engine.ActiveGamemode()
+	
+	-- Somehow gamemode maps are not loaded, let's try loading them
+	if populate_from_info_setting:GetActiveValue() and not self.gamemode_maps_pattern[current_gamemode] then
+		self:UpdateGamemodeMaps(current_gamemode)
 	end
 
 	for _, map in RandomPairs(all_maps) do
@@ -103,11 +118,9 @@ function PAM_EXTENSION:RegisterOptions()
 			continue
 		end
 
-		-- Using the convar gamemode to get the active gamemode as the gamemode extension will change the gamemode convar
-		local current_gamemode = GetConVar("gamemode"):GetString() or engine.ActiveGamemode()
 		if populate_from_info_setting:GetActiveValue() and
 				self.gamemode_maps_pattern[current_gamemode] and #self.gamemode_maps_pattern[current_gamemode] > 0 and
-				string.match(map, self.gamemode_maps_pattern[current_gamemode]) then
+				mapMatchesPattern(map, self.gamemode_maps_pattern[current_gamemode]) then
 			PAM.RegisterOption(map)
 			continue
 		end
